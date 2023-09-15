@@ -45,9 +45,8 @@ func (self *ScreemClient) SendImageToServer(img *image.RGBA) {
 
 	binary.Write(self.Conn, binary.BigEndian, bufferLen)
 
-	n, err := io.CopyN(self.Conn, &buf, bufferLen)
+	_, err := io.CopyN(self.Conn, &buf, bufferLen)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Sent", n, "bytes to server.")
 }

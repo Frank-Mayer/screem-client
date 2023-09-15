@@ -3,7 +3,6 @@ package screen
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"image/png"
 	"io"
 	"log"
@@ -31,7 +30,7 @@ func InitGuest(client *utils.ScreemClient) {
 func backgroundLoopHost() {
 	for {
 		captureScreen()
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 	}
 }
 
@@ -60,7 +59,6 @@ func backgroundLoopGuest() {
 
 func captureScreen() {
 	if ui.ScreenNum < 0 {
-		fmt.Println("No screen selected")
 		return
 	}
 
@@ -73,7 +71,5 @@ func captureScreen() {
 	}
 
 	ui.UpdateScreenPreview(img)
-	fmt.Println("UI updated")
 	Client.SendImageToServer(img)
-	fmt.Println("Image sent to server")
 }
