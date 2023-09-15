@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build
-        run: go build screem.go -o screem-win64.exe
+        run: go build -o screem-win64.exe screem.go
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
@@ -40,7 +40,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build
-        run: go build screem.go -o screem-l64
+        run: go build -o screem-l64 screem.go
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
@@ -55,7 +55,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build
-        run: go build screem.go -o screem-mac64
+        run: go build -o screem-mac64 screem.go
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
