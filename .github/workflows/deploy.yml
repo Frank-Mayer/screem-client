@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -54,7 +54,6 @@ jobs:
   deploy:
     needs:
       - win
-      - linux
       - mac
     environment:
       name: github-pages
