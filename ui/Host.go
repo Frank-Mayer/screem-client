@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"image"
-	"log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -13,7 +12,7 @@ import (
 )
 
 var (
-    ScreenNum int = -1
+	ScreenNum int = -1
 )
 
 func Host() {
@@ -40,18 +39,20 @@ func screenSelector() *widget.Select {
 	for i := 0; i < numOfScreens; i++ {
 		screenSlectArray[i] = fmt.Sprintf("Screen %d", i)
 	}
-    var screenSelect *widget.Select
-	screenSelect = widget.NewSelect(screenSlectArray, func(value string) {
-		log.Println("Selected", value)
-        ScreenNum = screenSelect.SelectedIndex()
-        bounds := screenshot.GetDisplayBounds(ScreenNum)
-        img.SetMinSize(fyne.NewSize(float32(bounds.Dx())/5, float32(bounds.Dy())/5))
-        w.Content().Refresh()
+	var screenSelect *widget.Select
+	screenSelect = widget.NewSelect(screenSlectArray, func(_ string) {
+		ScreenNum = screenSelect.SelectedIndex()
+		bounds := screenshot.GetDisplayBounds(ScreenNum)
+		img.SetMinSize(fyne.NewSize(float32(bounds.Dx())/5, float32(bounds.Dy())/5))
+		w.Content().Refresh()
 	})
 	return screenSelect
 }
 
 func UpdateScreenPreview(newImg *image.RGBA) {
-    img.Image = newImg
-    img.Refresh()
+	if newImg == nil {
+		return
+	}
+	img.Image = newImg
+	img.Refresh()
 }

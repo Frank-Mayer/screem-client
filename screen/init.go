@@ -20,6 +20,7 @@ var (
 func InitHosting(client *utils.ScreemClient) {
 	Client = client
 	go backgroundLoopHost()
+	go backgroundAckLoop()
 }
 
 func InitGuest(client *utils.ScreemClient) {
@@ -30,7 +31,17 @@ func InitGuest(client *utils.ScreemClient) {
 func backgroundLoopHost() {
 	for {
 		captureScreen()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(16 * time.Millisecond)
+	}
+}
+
+func backgroundAckLoop() {
+	for {
+		var ack bool
+		binary.Read(Client.Conn, binary.BigEndian, &ack)
+		if ack {
+			Client.Ack <- true
+		}
 	}
 }
 
@@ -44,16 +55,19 @@ func backgroundLoopGuest() {
 		buffer := new(bytes.Buffer)
 		n, err := io.CopyN(buffer, Client.Conn, size)
 		if err != nil {
-			log.Fatal(err)
+			log.Panicln(err)
 		}
 		if n != size {
-			log.Fatalf("Expected to read %d bytes, got %d\n", size, n)
+			log.Panicf("Expected to read %d bytes, got %d\n", size, n)
 		}
 		img, err := png.Decode(buffer)
 		if err != nil {
-			log.Fatal(err)
+			log.Panicln(err)
 		}
 		ui.UpdateScreen(&img)
+
+		// send OK to server to continue
+		binary.Write(Client.Conn, binary.BigEndian, true)
 	}
 }
 
@@ -66,7 +80,6 @@ func captureScreen() {
 
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
-		log.Println("Failed to capture screen:", err)
 		return
 	}
 

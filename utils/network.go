@@ -17,6 +17,7 @@ const (
 
 type ScreemClient struct {
 	Conn net.Conn
+    Ack chan bool
 }
 
 func NewClient(host string, port string) *ScreemClient {
@@ -29,12 +30,15 @@ func NewClient(host string, port string) *ScreemClient {
 
 	fmt.Println("Connected to server at", serverAddr)
 
-	return &ScreemClient{conn}
+	return &ScreemClient{
+        Conn: conn,
+        Ack: make(chan bool),
+    }
 }
 
 func (self *ScreemClient) Close() {
-    self.Conn.Close()
-    self.Conn = nil
+	self.Conn.Close()
+	self.Conn = nil
 }
 
 func (self *ScreemClient) SendImageToServer(img *image.RGBA) {
@@ -47,6 +51,9 @@ func (self *ScreemClient) SendImageToServer(img *image.RGBA) {
 
 	_, err := io.CopyN(self.Conn, &buf, bufferLen)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
+
+	// await ack from server
+    <-self.Ack
 }
