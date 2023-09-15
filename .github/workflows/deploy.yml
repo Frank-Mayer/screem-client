@@ -1,0 +1,77 @@
+name: Deploy to Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  win:
+    runs-on: windows-latest
+    steps:
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.1.0
+        with:
+          architecture: x64
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: go build screem.go -o screem-win64.exe
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './screem.exe'
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.1.0
+        with:
+          architecture: x64
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: go build screem.go -o screem-l64
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './screem-l64'
+  mac:
+    runs-on: macos-latest
+    steps:
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.1.0
+        with:
+          architecture: x64
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: go build screem.go -o screem-mac64
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './screem-mac64'
+  deploy:
+    needs:
+      - win
+      - linux
+      - mac
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
