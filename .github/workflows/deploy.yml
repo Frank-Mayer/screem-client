@@ -28,11 +28,11 @@ jobs:
       - name: Tidy
         run: go mod tidy
       - name: Build
-        run: go build -o screem-win64.exe screem.go
+        run: go build -o screem-windows-amd64.exe screem.go
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          path: './screem.exe'
+          path: './screem-windows-amd64.exe'
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -46,14 +46,20 @@ jobs:
       - name: Tidy
         run: go mod tidy
       - name: Build
-        run: go build -o screem-l64 screem.go
+        run: go build -o screem-linux-amd64 screem.go
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          path: './screem-l64'
+          path: './screem-linux-amd64'
   mac:
     runs-on: macos-latest
     steps:
+      - name: Install OpenGL (GL) Development Packages
+        run: sudo apt-get install libgl1-mesa-dev -y
+      - name: Install X11 Development Packages
+        run: sudo apt-get install libx11-dev libxcursor-dev -y
+      - name: Set PKG_CONFIG_PATH
+        run: export PKG_CONFIG_PATH=/usr/lib/pkgconfig
       - name: Setup Go environment
         uses: actions/setup-go@v4.1.0
         with:
@@ -64,11 +70,11 @@ jobs:
       - name: Tidy
         run: go mod tidy
       - name: Build
-        run: go build -o screem-mac64 screem.go
+        run: go build -o screem-darwin-amd64 screem.go
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          path: './screem-mac64'
+          path: './screem-darwin-amd64'
   deploy:
     needs:
       - win
@@ -81,6 +87,12 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v3
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: '.'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
