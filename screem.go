@@ -25,14 +25,15 @@ func main() {
 
 	switch mode {
 	case "host":
-		conn := utils.Dial(host, port)
-		screen.InitHosting(&conn)
-		ui.Host()
-		conn.Close()
+		client := utils.NewClient(host, port)
+        screen.InitHosting(client)
+        ui.Host()
+        client.Close()
 	case "join":
-		conn := utils.Dial(host, port)
+		conn := utils.NewClient(host, port)
+        defer conn.Close()
+        screen.InitGuest(conn)
 		ui.Guest()
-		conn.Close()
 	default:
 		fmt.Fprintf(
 			os.Stderr,

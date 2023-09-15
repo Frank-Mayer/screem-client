@@ -14,8 +14,6 @@ import (
 
 var (
     ScreenNum int = -1
-    img *canvas.Image = nil
-    w fyne.Window
 )
 
 func Host() {
