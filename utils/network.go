@@ -6,70 +6,54 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"io"
+	"log"
 	"net"
+	"os"
 )
 
 const (
-	maxIPv4Packet = 1400 // Recommended size for IPv4
-	maxIPv6Packet = 1230 // Recommended size for IPv6
+	maxPacketSize = 2048
 )
 
+var (
+	isSending = false
+)
+
+func Dial(host string, port string) net.Conn {
+	serverAddr := fmt.Sprintf("%s:%s", host, port)
+
+	conn, err := net.Dial("tcp", serverAddr)
+	if err != nil {
+		fmt.Println("Error connecting to server:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Connected to server at", serverAddr)
+
+	return conn
+}
+
 func SendImageToServer(conn net.Conn, img *image.RGBA) {
-	// Encode the image to PNG format
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		fmt.Println("Error encoding image:", err)
+	if isSending {
 		return
 	}
+	isSending = true
+	defer func() {
+		isSending = false
+	}()
 
-	// Determine the maximum packet size based on IPv4 or IPv6
-	maxPacketSize := maxIPv4Packet
-	serverIP := conn.RemoteAddr().(*net.TCPAddr).IP
-	if serverIP.To4() == nil {
-		maxPacketSize = maxIPv6Packet
+	var buf bytes.Buffer
+	png.Encode(&buf, img)
+
+	bufferLen := int64(buf.Len())
+
+	binary.Write(conn, binary.BigEndian, bufferLen)
+
+	// n, err := io.Copy(conn, bytes.NewReader(buf.Bytes()))
+	n, err := io.CopyN(conn, bytes.NewReader(buf.Bytes()), bufferLen)
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	// Split the image data into smaller packets and send them
-	imageBytes := buf.Bytes()
-	totalSize := len(imageBytes)
-	offset := 0
-
-	// Send the total size of the image to the server using binary.BigEndian.PutUint32
-	{
-		packetSize := make([]byte, 4)
-		binary.BigEndian.PutUint32(packetSize, uint32(totalSize))
-		_, err := conn.Write(packetSize)
-		if err != nil {
-			fmt.Println("Error sending image packet to server:", err)
-			return
-		}
-	}
-
-	for offset < totalSize {
-		end := offset + maxPacketSize
-		if end > totalSize {
-			end = totalSize
-		}
-
-		packet := imageBytes[offset:end]
-
-		_, err := conn.Write(packet)
-		if err != nil {
-			fmt.Println("Error sending image packet to server:", err)
-			return
-		}
-
-		offset = end
-	}
-
-	// Send a zero-length packet to indicate the end of the image
-	{
-		_, err := conn.Write([]byte{})
-		if err != nil {
-			fmt.Println("Error sending image packet to server:", err)
-			return
-		}
-	}
-
-	fmt.Println("Sent image to server")
+	fmt.Println("Sent", n, "bytes to server.")
 }

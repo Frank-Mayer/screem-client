@@ -2,46 +2,37 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
-    "net"
 
 	"screem.frankmayer.io/screen"
 	"screem.frankmayer.io/ui"
+	"screem.frankmayer.io/utils"
 )
 
 func main() {
 	argsCount := len(os.Args) - 1
 	if argsCount != 3 {
-		fmt.Fprintf(
-			os.Stderr,
+		log.Fatalf(
 			"Wrong number of arguments. Expected 3, got %d.\nExpected argument format: <host|join> <server address> <server port>\n",
 			argsCount,
 		)
-		os.Exit(1)
-		return
 	}
 
 	mode := os.Args[1]
-    host := os.Args[2]
-    port := os.Args[3]
-
-    serverAddr := fmt.Sprintf("%s:%s", host, port)
-
-    conn, err := net.Dial("tcp", serverAddr)
-    if err != nil {
-        fmt.Println("Error connecting to server:", err)
-        os.Exit(1)
-    }
-    defer conn.Close()
-
-    fmt.Println("Connected to server at", serverAddr)
+	host := os.Args[2]
+	port := os.Args[3]
 
 	switch mode {
 	case "host":
+		conn := utils.Dial(host, port)
 		screen.InitHosting(&conn)
 		ui.Host()
+		conn.Close()
 	case "join":
+		conn := utils.Dial(host, port)
 		ui.Guest()
+		conn.Close()
 	default:
 		fmt.Fprintf(
 			os.Stderr,
