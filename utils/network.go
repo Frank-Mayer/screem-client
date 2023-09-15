@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net"
+    "compress/zlib"
 )
 
 const (
@@ -45,11 +46,17 @@ func (self *ScreemClient) SendImageToServer(img *image.RGBA) {
 	var buf bytes.Buffer
 	png.Encode(&buf, img)
 
-	bufferLen := int64(buf.Len())
+    // compress image
+    var compressed bytes.Buffer
+    w := zlib.NewWriter(&compressed)
+    w.Write(buf.Bytes())
+    w.Close()
+
+	bufferLen := int64(compressed.Len())
 
 	binary.Write(self.Conn, binary.BigEndian, bufferLen)
 
-	_, err := io.CopyN(self.Conn, &buf, bufferLen)
+    _, err := io.CopyN(self.Conn, &compressed, bufferLen)
 	if err != nil {
 		log.Fatalln(err)
 	}

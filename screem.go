@@ -30,9 +30,9 @@ func main() {
         ui.Host()
         client.Close()
 	case "join":
-		conn := utils.NewClient(host, port)
-        defer conn.Close()
-        screen.InitGuest(conn)
+		client := utils.NewClient(host, port)
+        defer client.Close()
+        screen.InitGuest(client)
 		ui.Guest()
 	default:
 		fmt.Fprintf(

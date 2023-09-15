@@ -2,10 +2,13 @@ package screen
 
 import (
 	"bytes"
+	"compress/zlib"
 	"encoding/binary"
+	"fmt"
 	"image/png"
 	"io"
 	"log"
+	"os"
 	"time"
 
 	"github.com/kbinani/screenshot"
@@ -55,14 +58,28 @@ func backgroundLoopGuest() {
 		buffer := new(bytes.Buffer)
 		n, err := io.CopyN(buffer, Client.Conn, size)
 		if err != nil {
-			log.Panicln(err)
+			fmt.Println(err)
+            os.Exit(1)
 		}
 		if n != size {
 			log.Panicf("Expected to read %d bytes, got %d\n", size, n)
 		}
-		img, err := png.Decode(buffer)
+
+		// decompress image
+		r, err := zlib.NewReader(buffer)
+		defer r.Close()
 		if err != nil {
-			log.Panicln(err)
+			log.Panicln("Error decompressing image:", err)
+		}
+		uncompressed := new(bytes.Buffer)
+		_, err = io.Copy(uncompressed, r)
+		if err != nil {
+			log.Panicln("Error decompressing image:", err)
+		}
+
+		img, err := png.Decode(uncompressed)
+		if err != nil {
+			log.Panicln("Error decoding image:", err)
 		}
 		ui.UpdateScreen(&img)
 
