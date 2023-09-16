@@ -22,6 +22,7 @@ jobs:
         uses: actions/setup-go@v4.1.0
         with:
           go-version: '>=1.21.1'
+          cache: false
           architecture: x64
       - name: Checkout
         uses: actions/checkout@v3
@@ -40,6 +41,7 @@ jobs:
         uses: actions/setup-go@v4.1.0
         with:
           go-version: '>=1.21.1'
+          cache: false
           architecture: x64
       - name: Checkout
         uses: actions/checkout@v3
@@ -68,13 +70,15 @@ jobs:
         run: ls -l
       - name: Generate index.html
         run: |
-          echo '<h1>Downloads</h1><ul>' > index.html
-          for n in *; do printf '<li><a href="%s">%s</a></li>\n' "$n" "$n"; done >> index.html
+          cd artifact
+          echo '<h1>Artifacts</h1><ul>' > index.html
+          for n in screem-*; do printf '<li><a href="%s">%s</a></li>\n' "$n" "$n"; done >> index.html
           echo '</ul>' >> index.html
+          cd ..
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: '.'
+          path: './artifact'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
